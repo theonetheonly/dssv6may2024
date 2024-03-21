@@ -1103,7 +1103,7 @@ public class HikController {
                             emergency.setLatitude(latitude);
                             emergency.setLongitude(longitude);
                             emergency.setMeasuredAt(measuredAt);
-                            emergencyService.saveEmergency(emergency);
+                       //     emergencyService.saveEmergency(emergency);
 
 
                             contextName = "CREATE_AND_SAVE_EMERGENCY_EVENT";

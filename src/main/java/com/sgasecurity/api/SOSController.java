@@ -69,9 +69,29 @@ public class SOSController {
     public String createTheSOSRequest(@RequestParam("eventid") String eventid) {
         common = new Common();
         try {
+
+
             String result = createSOSRequest(eventid);
+            contextName = "BEFORE_AND_AFTER_CREATESOSREQUEST_FUNCTION_CALL";
+            try {
+                contextValueJsonString = "Event ID: "+eventid+ " Rescue Response: " + String.valueOf(result);
+                System.out.println(contextValueJsonString);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
+
             return result;
         } catch (Exception e){
+            contextName = "ERROR_BEFORE_AND_AFTER_CREATESOSREQUEST_FUNCTION_CALL";
+            try {
+                contextValueJsonString = "Event ID: "+eventid+ " Error: " + e.toString();
+                System.out.println(contextValueJsonString);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
             common.logErrors("api", "SOSController", "createTheSOSRequest", "Create SOS Request", e.toString());
             return "FAIL";
         }
@@ -129,55 +149,230 @@ public class SOSController {
     public String createSOSRequest(String eventid) throws JsonProcessingException {
 
         try {
+
+            Response response = null;
+
+            ObjectMapper OM  = new ObjectMapper();
+
+            String rescueMemberId ="";
+
             configData = configDataService.getConfigDataByConfigName("RESCUE_URL");
             String rescueUrl = configData.getConfigValue();
             configData = configDataService.getConfigDataByConfigName("RESCUECO_TOKEN");
             String rescueToken = configData.getConfigValue();
 
-            emergency = emergencyService.getEmergencyByEventId(eventid);
-            String customerNo = emergency.getSystemCustomerNo();
-            String rescueMemberId = findPersonId(customerNo);
-            String latitude = emergency.getLatitude();
-            String longitude = emergency.getLongitude();
-            String measuredAt = emergency.getMeasuredAt().toString();
+            String latitude = "";  // emergency.getLatitude();
+            String longitude = ""; // emergency.getLongitude();
+            String measuredAt = ""; //emergency.getMeasuredAt().toString();
 
-            customer = customerService.getCustomerBySystemCustomerNo(customerNo);
-
-            String firstName = customer.getFirstName();
-            String lastName = customer.getLastName();
+            String firstName = ""; // customer.getFirstName();
+            String lastName = ""; // customer.getLastName();
             String otherNames = "";
-            String phoneNo = customer.getPhone();
-            phoneNo = phoneNo.replaceFirst("^\\+\\d{4}", "");
-            String address = customer.getPostalAddress() + " "+customer.getRoadStreet() +", "+customer.getTownCity();
+            String phoneNo = ""; // customer.getPhone();
+            String address ="";
 
-            Client client = ClientBuilder.newClient();
-            Entity payload = Entity.json("{\"source\": \"SGA App\", \"location\": {\"latitude\": \""+latitude+"\",\"longitude\": \""+longitude+"\",    \"measuredAt\": \""+measuredAt+"\",    \"provider\": \"GPS\"  },  \"phoneNumber\": {\"countryCode\": \"254\", \"description\": \"Mobile phone number.\", \"nationalNumber\": \""+phoneNo+"\"  },  \"caller\": {\"memberId\": \""+rescueMemberId+"\", \"firstName\": \""+firstName+"\",\"lastName\": \""+lastName+"\",\"otherNames\": \""+otherNames+"\"},\"address\": \""+address+"\",\"issue\":\"There appears to have been an emergency\"}");
-            Response response = client.target(rescueUrl+"/sos_requests")
-                    .request(MediaType.APPLICATION_JSON_TYPE)
-                    .header("authorization", "Bearer "+rescueToken)
-                    .post(payload);
+
+            int steps =0;
+            try {
+                emergency = emergencyService.getEmergencyByEventId(eventid);
+                String emergencyData =  OM.writeValueAsString(OM);
+
+
+                latitude = emergency.getLatitude();
+                longitude = emergency.getLongitude();
+                measuredAt = emergency.getMeasuredAt().toString();
+
+
+
+                contextName = "CREATESOSREQUEST_FUNCTION_CALL_EMERGENCY_DATA";
+                try {
+                    contextValueJsonString = "Event ID: "+eventid+ " Emergency Data: " + String.valueOf(emergencyData);
+                    System.out.println(contextValueJsonString);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+                
+            }
+            catch (Exception ex)
+            {
+                contextName = "ERROR_CREATESOSREQUEST_FUNCTION_CALL_EMERGENCY_DATA";
+                try {
+                    contextValueJsonString = "Event ID: "+eventid+ " Error: " +ex.toString();
+                    System.out.println(contextValueJsonString);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+            }
+
+
+            try {
+                String customerNo = emergency.getSystemCustomerNo();
+                customer = customerService.getCustomerBySystemCustomerNo(customerNo);
+                rescueMemberId = customer.getRescueMemberId();
+                //            String rescueMemberId = findPersonId(customerNo);
+             /*   String latitude = emergency.getLatitude();
+                String longitude = emergency.getLongitude();
+                String measuredAt = emergency.getMeasuredAt().toString();
+               */
+
+                 firstName = customer.getFirstName();
+                 lastName = customer.getLastName();
+                 otherNames = "";
+                 phoneNo = customer.getPhone();
+                phoneNo = phoneNo.replaceFirst("^\\+\\d{4}", "");
+                address = customer.getPostalAddress() + " "+customer.getRoadStreet() +", "+customer.getTownCity();
+
+                String customerData = OM.writeValueAsString(customer);
+                contextName = "CREATESOSREQUEST_FUNCTION_CALL_CUSTOMER_DATA";
+                try {
+                    contextValueJsonString = "Event ID: "+eventid+ " Customer Data: " + customerData;
+                    System.out.println(contextValueJsonString);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
+            }
+            catch (Exception ex)
+            {
+
+                contextName = "ERROR_CREATESOSREQUEST_FUNCTION_CALL_CUSTOMER_DATA";
+                try {
+                    contextValueJsonString = "Event ID: "+eventid+ " Error: " + ex.toString();
+                    System.out.println(contextValueJsonString);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+            }
+
+
+
+
+            String payloadString = "{\"source\": \"SGA App\", \"location\": {\"latitude\": \"" + latitude + "\",\"longitude\": \"" + longitude + "\",    \"measuredAt\": \"" + measuredAt + "\",    \"provider\": \"GPS\"  },  \"phoneNumber\": {\"countryCode\": \"254\", \"description\": \"Mobile phone number.\", \"nationalNumber\": \"" + phoneNo + "\"  },  \"caller\": {\"memberId\": \"" + rescueMemberId + "\", \"firstName\": \"" + firstName + "\",\"lastName\": \"" + lastName + "\",\"otherNames\": \"" + otherNames + "\"},\"address\": \"" + address + "\",\"issue\":\"SGA Kenya Customer Emergency Call\"}";
+
+            try {
+                Client client = ClientBuilder.newClient();
+
+                Entity payload = Entity.json(payloadString);
+//                Entity payload = Entity.json("{\"source\": \"SGA App\", \"location\": {\"latitude\": \"" + latitude + "\",\"longitude\": \"" + longitude + "\",    \"measuredAt\": \"" + measuredAt + "\",    \"provider\": \"GPS\"  },  \"phoneNumber\": {\"countryCode\": \"254\", \"description\": \"Mobile phone number.\", \"nationalNumber\": \"" + phoneNo + "\"  },  \"caller\": {\"memberId\": \"" + rescueMemberId + "\", \"firstName\": \"" + firstName + "\",\"lastName\": \"" + lastName + "\",\"otherNames\": \"" + otherNames + "\"},\"address\": \"" + address + "\",\"issue\":\"SGA Kenya Customer Emergency Call\"}");
+
+                String rescuePayloadURL = rescueUrl + "/sos_requests";
+                response = client.target(rescuePayloadURL)
+                        .request(MediaType.APPLICATION_JSON_TYPE)
+                        .header("authorization", "Bearer " + rescueToken)
+                        .post(payload);
+
+                try {
+                    Thread.sleep(2000);
+                }
+                catch (Exception et)
+                {
+
+                }
+                contextName = "INVOKE_RESCUE_EMERGENCY_REQUEST_API";
+                try {
+                    contextValueJsonString = "Event ID: "+eventid+ " Payload: " + payloadString +" Response : " +String.valueOf(response) ;
+                    System.out.println(contextValueJsonString);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
+
+            }
+            catch (Exception ex)
+            {
+
+                contextName = "ERROR_INVOKE_RESCUE_EMERGENCY_REQUEST_API";
+                try {
+                    contextValueJsonString = "Event ID: "+eventid+ " Payload String: "+ payloadString+ " Error : " +ex.toString() ;
+                    System.out.println(contextValueJsonString);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
+
+            }
+
 
 //      Save the response in database
-            int rescueResponseStatus = response.getStatus();
-            String rescueResponseHeaders = response.getHeaders().toString();
-            String rescueResponseBody = response.readEntity(String.class);
+            try {
+                int rescueResponseStatus = response.getStatus();
+                String rescueResponseHeaders = response.getHeaders().toString();
+                String rescueResponseBody = response.readEntity(String.class);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode rootNode = objectMapper.readTree(rescueResponseBody);
-            String callerId = rootNode.get("id").asText();
-            String rescueCallStatus = rootNode.get("status").asText();
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode rootNode = objectMapper.readTree(rescueResponseBody);
+                String callerId = rootNode.get("id").asText();
+                String rescueCallStatus = rootNode.get("status").asText();
 
-            emergency.setRescueResponseStatus(rescueResponseStatus);
-            emergency.setRescueResponseHeaders(rescueResponseHeaders);
-            emergency.setRescueResponseBody(rescueResponseBody);
-            emergency.setRescueCallerId(callerId);
-            emergency.setRescueCallStatus(rescueCallStatus);
-            emergencyService.saveEmergency(emergency);
+
+                emergency.setRescueResponseStatus(rescueResponseStatus);
+                emergency.setRescueResponseHeaders(rescueResponseHeaders);
+                emergency.setRescueResponseBody(rescueResponseBody);
+                emergency.setRescueCallerId(callerId);
+                emergency.setRescueCallStatus(rescueCallStatus);
+                emergencyService.saveEmergency(emergency);
+
+                contextName = "UPDTATE_EMERGENCY_REQUEST_RESPONSE_IN_DB";
+                try {
+                    contextValueJsonString = "Event ID: "+eventid+ " Response Headers: " + rescueResponseHeaders+ " Response Body: "+ rescueResponseBody;
+                    System.out.println(contextValueJsonString);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
+
+            }
+            catch (Exception ex)
+            {
+
+                contextName = "ERROR_UPDTATE_EMERGENCY_REQUEST_RESPONSE_IN_DB";
+                try {
+                    contextValueJsonString = "Event ID: "+eventid+ " Error : " +ex.toString() ;
+                    System.out.println(contextValueJsonString);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
+
+
+            }
+
+
+            contextName = "CREATESOSREQUEST_FUNCTION_CALL";
+            try {
+                contextValueJsonString = "Event ID: "+eventid+ " Rescue Response: " + String.valueOf(response);
+                System.out.println(contextValueJsonString);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
 
 //          return "Status: " + response.getStatus() + "\n\n" + "Headers: " + response.getHeaders() + "\n\n" + "Body:" + response.readEntity(String.class);
             return "SUCCESS";
 
         } catch (Exception e){
+
+
+            contextName = "ERROR_IN CREATESOSREQUEST_FUNCTION_CALL";
+            try {
+                contextValueJsonString = "ERROR: "+e.toString() ;
+                System.out.println(contextValueJsonString);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
+
+
+
             return "FAIL";
         }
     }
@@ -207,6 +402,7 @@ public class SOSController {
 
 
             if(!Objects.isNull(emergency)){
+
                 String rescueResponseBody = emergency.getRescueResponseBody();
                 ObjectMapper objectMapper = new ObjectMapper();
                 JsonNode rootNode = objectMapper.readTree(rescueResponseBody);
@@ -273,7 +469,7 @@ public class SOSController {
 
             contextName = "ERROR_STARTING_SOS_CALL";
             try {
-                contextValueJsonString = "Event ID: "+ eventid+" - Null emergency object";
+                contextValueJsonString = "Event ID: "+ eventid+" - Error: -- "+e.toString();
                 System.out.println(contextValueJsonString);
             } catch (Exception ez) {
                 ez.printStackTrace();
