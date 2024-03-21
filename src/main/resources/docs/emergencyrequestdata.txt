@@ -1,0 +1,17 @@
+Bearer Token: Bearer 3EX4I2D68OzoItmYpoV3yaDRMDt41UiRvR663VWRFOZl8MpzD52G0RKdWF_5cHeY2sMg-4QcMo-KAW8-0jC-1A
+Content Type: application/json
+Data: {"application":"hpp","hppsiteid":"8a74886a89293c1501893fa59f3f113d","data":{"event":"reportemergency","latitude":"-1.292922","longitude":"32.27272","measuredAt":"2023-07-13 12:18:00"}}
+
+======
+
+
+My proposal also is that you implement the SMS and email that goes to the client a day before installation , we can fill in the technician images and names later when we do the portal
+
+
+BEFORE_INSTALLATION_EMAIL_SUBJECT
+BEFORE_INSTALLATION_EMAIL_BODY
+BEFORE_INSTALLATION_SMS_BODY
+
+
+
+
