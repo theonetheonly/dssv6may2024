@@ -645,7 +645,6 @@ public class HikController {
                     nextPaymentDate = installationSite.getNextPaymentDate();
                     today = nextDateService.startingDate();
                     todayFormatYYYYMD = nextDateService.startingDateYYYYMD();
-
                     String invoiceResponse = "{\"error\":\"No invoice response found\"}";
                     try {
                         invoiceResponse = getInvoiceResponse(omniUrl, omniUsername, omniPassword, companyName, omniInvoiceNo);

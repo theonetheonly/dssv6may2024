@@ -44,6 +44,25 @@ public class SOSController {
     ConfigDataService configDataService;
     ConfigData configData = null;
 
+    @Autowired
+    AuditTrailService auditTrailService;
+    String contextName = "";
+    String contextDesc = "";
+    String contextValueJsonString = "";
+
+
+    public void captureAuditTrail(String contextName, String contextDesc, String contextValue) {
+        try {
+            AuditTrail auditTrail = new AuditTrail();
+            auditTrail.setContextName(contextName);
+            auditTrail.setContextDesc(contextDesc);
+            auditTrail.setContextValue(contextValue);
+            auditTrailService.saveAuditTrail(auditTrail);
+        } catch (Exception e) {
+            common.logErrors("api", "SOSController", "captureAuditTrail", "Capture Audit Trail", e.toString());
+        }
+    }
+
     @CrossOrigin
     @GetMapping("/sos/request/send")
     @ResponseBody
@@ -177,6 +196,16 @@ public class SOSController {
 
             emergency = emergencyService.getEmergencyByEventId(eventid);
 
+            contextName = "STARTING_SOS_CALL";
+            try {
+                contextValueJsonString = "STARTING SOS FOR EVENT ID : "+eventid;
+                System.out.println(contextValueJsonString);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
+
             if(!Objects.isNull(emergency)){
                 String rescueResponseBody = emergency.getRescueResponseBody();
                 ObjectMapper objectMapper = new ObjectMapper();
@@ -185,7 +214,8 @@ public class SOSController {
 
                 Client client = ClientBuilder.newClient();
 
-                Response response = client.target(rescueUrl+"/sos_requests/"+id)
+                String rescueFullUri = rescueUrl+"/sos_requests/"+id;
+                Response response = client.target(rescueFullUri)
                         .request(javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE)
                         .header("Authorization", "Bearer " + rescueToken)
                         .get();
@@ -196,22 +226,63 @@ public class SOSController {
                 JsonNode rootNodeSOS = objectMapperSOS.readTree(jsonResponse);
                 String status = rootNodeSOS.get("status").asText();
 
+                contextName = "EXECUTED_RESCUE_API_URL";
+                try {
+                    contextValueJsonString = "Event ID: "+ eventid+" - Rescue Full URL: "+ rescueFullUri + " - Respons Status :"+status +" Raw response: "+ String.valueOf(jsonResponse);
+                    System.out.println(contextValueJsonString);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
+
+
                 if(status.equals("CLOSED")){
                     map.put("status", "NOT_ONGOING");
+                    map.put("rescueresponse", status);
+                    map.put("extrainfo", "");
                     return map;
                 } else if(status.equals("CURRENT")){
                     map.put("status", "ONGOING");
+                    map.put("rescueresponse", status);
+                    map.put("extrainfo", "");
                     return map;
                 } else {
                     map.put("status", "NOT_ONGOING");
+                    map.put("rescueresponse", status);
                     return map;
                 }
             } else {
+
+                contextName = "STARTING_SOS_CALL_NULL_EMERGENCY_OBJECT";
+                try {
+                    contextValueJsonString = "Event ID: "+ eventid+" - Null emergency object";
+                    System.out.println(contextValueJsonString);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
                 map.put("status", "NOT_ONGOING");
+                map.put("rescueresponse", "");
+                map.put("extrainfo", "Emergency Object Empty");
                 return map;
             }
         } catch (Exception e){
+
+
+            contextName = "ERROR_STARTING_SOS_CALL";
+            try {
+                contextValueJsonString = "Event ID: "+ eventid+" - Null emergency object";
+                System.out.println(contextValueJsonString);
+            } catch (Exception ez) {
+                ez.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
             map.put("status", "FAILED");
+            map.put("rescueresponse", "");
+            map.put("extrainfo", "Error: "+e.toString());
             return map;
         }
     }
