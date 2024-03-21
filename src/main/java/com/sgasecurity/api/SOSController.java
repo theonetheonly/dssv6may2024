@@ -391,7 +391,7 @@ public class SOSController {
 
             emergency = emergencyService.getEmergencyByEventId(eventid);
 
-            contextName = "STARTING_SOS_CALL";
+            contextName = "CHECKING_SOS_CALL_STATUS";
             try {
                 contextValueJsonString = "STARTING SOS FOR EVENT ID : "+eventid;
                 System.out.println(contextValueJsonString);
