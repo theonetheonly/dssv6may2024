@@ -379,15 +379,72 @@ public class HikController {
 
         common = new Common();
 
-        String hppsiteid = apiRequestData.getHppsiteid();
-        String application = apiRequestData.getApplication();
-        Data data = apiRequestData.getData();
+        Data data = null; //  apiRequestData.getData();
 
-        String event = data.getEvent();
-        String latitude = data.getLatitude();
-        String longitude = data.getLongitude();
-        String measuredAt = data.getMeasuredAt();
+        String event =  ""; // data.getEvent();
+        String latitude = ""; //data.getLatitude();
+        String longitude = ""; //data.getLongitude();
+        String measuredAt = ""; //data.getMeasuredAt();
 
+        String hppsiteid ="";
+        String application ="";
+
+
+        try{
+            hppsiteid = apiRequestData.getHppsiteid();
+            application = apiRequestData.getApplication();
+
+
+            contextName = "APIREQUEST_DATA";
+            try {
+                contextValueJsonString = String.valueOf(data);
+                System.out.println(contextValueJsonString);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+        }
+        catch (Exception ex)
+        {
+            contextName = "ERROR_APIREQUEST_DATA";
+            try {
+                contextValueJsonString = ex.toString();
+                System.out.println(contextValueJsonString);
+            } catch (Exception e) {
+                ex.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
+        }
+
+        try {
+
+            data = apiRequestData.getData();
+            event = data.getEvent();
+            latitude = data.getLatitude();
+            longitude = data.getLongitude();
+            measuredAt = data.getMeasuredAt();
+
+            contextName = "SENDEVENT_CAPTURE_DATA";
+            try {
+                contextValueJsonString = String.valueOf(data);
+                System.out.println(contextValueJsonString);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+        }
+        catch (Exception ex)
+        {
+            contextName = "ERROR_SENDEVENT_CAPTURE_DATA";
+            try {
+                contextValueJsonString = String.valueOf(ex.toString());
+                System.out.println(contextValueJsonString);
+            } catch (Exception e) {
+                ex.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+        }
         LocalDate handoverDate = LocalDate.now();
 
 //        String manuallySetHandoverDate = apiRequestData.getManuallySetHandoverDate();
@@ -396,9 +453,11 @@ public class HikController {
 //            handoverDate = LocalDate.parse(manuallySetHandoverDate);
 //        }
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        String jsonData = objectMapper.writeValueAsString(data);
-
+        String jsonData ="";
+        if(data!=null) {
+            ObjectMapper objectMapper = new ObjectMapper();
+            jsonData = objectMapper.writeValueAsString(data);
+        }
         HttpHeaders responseHeaders = new HttpHeaders();
 //      responseHeaders.set("Content-Type", contentType);
         responseHeaders.set("Content-Type", "application/json");
@@ -438,22 +497,52 @@ public class HikController {
 //                    .body("Invalid token");
 //        }
         if(!isValidApplication(application)){
+
+            contextName = "SEND_EVENT_APPLICATION_DATA_UNAUTHORIZED";
+            try {
+                contextValueJsonString = String.valueOf(application);
+                System.out.println(contextValueJsonString);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
+
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .headers(responseHeaders)
                     .body("Invalid application");
         }
         if(!isValidJson(jsonData)){
+            contextName = "SEND_EVENT_JSON_DATA_NOT_ACCEPTABLE";
+            try {
+                contextValueJsonString = String.valueOf(application);
+                System.out.println(contextValueJsonString);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE)
                     .headers(responseHeaders)
                     .body("Invalid json data");
         }
         if(!isValidHppSiteId(hppsiteid)){
+            contextName = "SEND_EVENT_HPPSITEID_NOT_ACCEPTABLE";
+            try {
+                contextValueJsonString = String.valueOf(application);
+                System.out.println(contextValueJsonString);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
             return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE)
                     .headers(responseHeaders)
                     .body("Invalid HIK HPP site id");
         }
 
         try {
+
             installationSite = installationSiteService.getInstallationSiteByHppSiteId(hppsiteid);
             if(!Objects.isNull(installationSite)) {
                 String customerNo = installationSite.getSystemCustomerNo();

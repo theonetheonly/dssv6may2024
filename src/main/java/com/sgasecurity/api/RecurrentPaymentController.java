@@ -2886,14 +2886,32 @@ public void sendSiteReconnectionSMSToCustomer(String phone, String customerName,
 
     public Map<String, String> postInvoiceToOmniAtDueDate(String tokenId, LocalDate nextPaymentDate) {
         common = new Common();
+        DateFunctions dateFunctions = new DateFunctions();
 
         Map<String, String> map = new HashMap<>();
         try {
             LocalDate startingDate = LocalDate.now();
+
+
+
             String todayDate = nextDateService.startingDate();
             todayFormatYYYYMD = nextDateService.startingDateYYYYMD();
             onThisDay = nextDateService.getDayValue(startingDate);
             plus30Days = nextDateService.add30DaysYYYYMD();
+
+
+            String finalStartingDateString =  dateFunctions.doFormatDate(3, startingDate);
+            nextPaymentDate = dateFunctions.getNextAnniversayReturnDate(startingDate);
+            String finalNextDateString= dateFunctions.doFormatDate(3, nextPaymentDate);
+
+            /*
+            nextPaymentDate = installationSite.getNextPaymentDate();
+            today = nextDateService.startingDate();
+            todayFormatYYYYMD = nextDateService.startingDateYYYYMD();
+            onThisDay = nextDateService.getDayValue(startingDate);
+            plus30Days = nextDateService.add30DaysYYYYMD();
+            */
+
 
             ConfigData configDataServiceCode = configDataService.getConfigDataByConfigName("SAFE_HOME_SERVICE_CODE");
             String safeHomeServiceCode = configDataServiceCode.getConfigValue();
@@ -2913,7 +2931,7 @@ public void sendSiteReconnectionSMSToCustomer(String phone, String customerName,
 //          1. POST INVOICE TO OMNI
 //             A. Prepare json request data
             String firstDescription = "Monthly Subscription Service charge for ";
-            String secondDescription = " for the period " + todayDate.toString() + " to " + nextPaymentDate.toString();
+            String secondDescription = "for the period " +finalStartingDateString + " to " + finalNextDateString;
             requestBodyJson = "{\"invoice\" : {\"customer_account_code\" : \"" + customerNo + "\", \"invoice_lines\": [{\"description\" : \"" + firstDescription + "\"}, {\"stock_code\": \"" + pkgName + "\",\"quantity\" : 1,\"selling_price\" : " + paymentAmountExclusive + "}, {\"description\" : \"" + secondDescription + "\"}]}}";
 
 //          B. Post Invoice to Omni

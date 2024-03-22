@@ -139,6 +139,9 @@ public class PaymentController {
     public String omniInvoicePush(@RequestParam("customerNo") String customerNo, @RequestParam("tokenId") String tokenId) throws JsonProcessingException {
         common = new Common();
         try {
+            DateFunctions  dateFunctions= new DateFunctions();
+
+
             double amountInclusive = 0;
             int transactionNo = 0;
             String invoiceRefNo = "NOT_YET_ASSIGNED";
@@ -161,11 +164,17 @@ public class PaymentController {
             emailApiUrl = configDataEmail.getConfigValue();
 
             LocalDate startingDate = LocalDate.now();
+            String finalStartingDateString =  dateFunctions.doFormatDate(3, startingDate);
+            nextPaymentDate = dateFunctions.getNextAnniversayReturnDate(startingDate);
+            String finalNextDateString= dateFunctions.doFormatDate(3, nextPaymentDate);
+
+            /*
             nextPaymentDate = installationSite.getNextPaymentDate();
             today = nextDateService.startingDate();
             todayFormatYYYYMD = nextDateService.startingDateYYYYMD();
             onThisDay = nextDateService.getDayValue(startingDate);
             plus30Days = nextDateService.add30DaysYYYYMD();
+            */
 
             ConfigData configDataSafeHomeServiceCode = configDataService.getConfigDataByConfigName("SAFE_HOME_SERVICE_CODE");
             String safeHomeServiceCode = configDataSafeHomeServiceCode.getConfigValue();
@@ -197,8 +206,11 @@ public class PaymentController {
             // 1. POST INVOICE TO OMNI
             // A. Prepare json request data
 //            requestBodyJson = "{\"invoice\" : {\"customer_account_code\" : \"" + customerNo + "\", \"invoice_lines\": [{\"description\" : \"Posting invoice to Omni\"}, {\"stock_code\": \""+pkgName+"\",\"quantity\" : 1,\"selling_price\" : " + paymentAmount + "}, {\"description\" : \"Service as at " + today.toString() + " to " + nextPaymentDate.toString() + "\"}]}}";
+
             String firstDescription = "Monthly Subscription Service charge for ";
-            String secondDescription = " for the period "+todayFormatYYYYMD.toString() + " to " + nextPaymentDate.toString();
+
+            String secondDescription = "for the period "+finalStartingDateString+ " to " + finalNextDateString;
+
             requestBodyJson = "{\"invoice\" : {\"customer_account_code\" : \"" + customerNo + "\", \"invoice_lines\": [{\"description\" : \""+firstDescription+"\"}, {\"stock_code\": \""+pkgName+"\",\"quantity\" : 1,\"selling_price\" : " + paymentAmount + "}, {\"description\" : \""+secondDescription+"\"}]}}";
 
 
