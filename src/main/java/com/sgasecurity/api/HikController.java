@@ -1103,7 +1103,7 @@ public class HikController {
                             emergency.setLatitude(latitude);
                             emergency.setLongitude(longitude);
                             emergency.setMeasuredAt(measuredAt);
-                            emergencyService.saveEmergency(emergency);
+                         //   emergencyService.saveEmergency(emergency);
 
 
                             contextName = "CREATE_AND_SAVE_EMERGENCY_EVENT";
@@ -1117,6 +1117,34 @@ public class HikController {
 
                         } catch (Exception e){
                             common.logErrors("api", "HikController", "sendEvent", "Save New Emergency Record", e.toString());
+                        }
+                    }
+                    else{
+
+                        try {
+                            emergency = emergencyService.getEmergencyBySystemCustomerNo(customerNo);
+                            generatedString = emergency.getEventId();
+                            contextName = "GET_EXISIING_EMERGENCY_OBJECT";
+                            try {
+                                contextValueJsonString = objectMapper.writeValueAsString(emergency);
+                                System.out.println(contextValueJsonString);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+                        }
+                        catch (Exception ex)
+                        {
+                            emergency = emergencyService.getEmergencyBySystemCustomerNo(customerNo);
+                            contextName = "ERROR_GET_EXISIING_EMERGENCY_OBJECT";
+                            try {
+                                contextValueJsonString =ex.toString();
+                                System.out.println(contextValueJsonString);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
                         }
                     }
 
@@ -1151,7 +1179,11 @@ public class HikController {
 
                     if(mapStatuses != null) {
 
+
                         if (mapStatuses.get("status").equals("NOT_ONGOING")) {
+
+                            emergency.setRescueCallStatus("NOT_ONGOING");
+                            emergencyService.saveEmergency(emergency);
 
                             contextName = "EMERGENCY_RESPONSE_MAP_STATUS";
                             try {
