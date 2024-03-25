@@ -1,5 +1,6 @@
 package com.sgasecurity.api;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -28,6 +29,25 @@ public class HandoverEmailingController {
     String emailBody = null;
     String emailApiUrl = null;
 
+
+    @Autowired
+    AuditTrailService auditTrailService;
+    String contextName = "";
+    String contextDesc = "";
+    String contextValueJsonString = "";
+
+    public void captureAuditTrail(String contextName, String contextDesc, String contextValue) {
+        common = new Common();
+        try {
+            AuditTrail auditTrail = new AuditTrail();
+            auditTrail.setContextName(contextName);
+            auditTrail.setContextDesc(contextDesc);
+            auditTrail.setContextValue(contextValue);
+            auditTrailService.saveAuditTrail(auditTrail);
+        } catch (Exception e) {
+            common.logErrors("api", "InstallationReminderController", "captureAuditTrail", "Capture Audit Trail", e.toString());
+        }
+    }
     @CrossOrigin
     @GetMapping("/addhandedovercustomers")
     @ResponseBody
@@ -70,19 +90,65 @@ public class HandoverEmailingController {
                             tempHandedoverCustomersToday.setPackageType(packageTypeNameResult);
                             tempHandedoverCustomersToday.setHandoverDate(installationSite.getHandoverDate());
                             tempHandedoverCustomersTodayService.saveTempHandedoverCustomersToday(tempHandedoverCustomersToday);
+
+
+                            ObjectMapper objectMapper = new ObjectMapper();
+
+                            contextName = "AT_HANDED_OVER_CUSTOMERS";
+                            try {
+                                contextValueJsonString = objectMapper.writeValueAsString(tempHandedoverCustomersToday);
+                                System.out.println(contextValueJsonString);
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+                            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
+
+
                         } else{
                             System.out.println("Customer with customer no. " + customer.getSystemCustomerNo()+" not found");
 //                            return "Customer with customer no. " + customer.getSystemCustomerNo()+" exists in the list";
+
+                            contextName = "AT_HANDED_OVER_CUSTOMERS";
+                            try {
+                                contextValueJsonString ="Customer with customer no. " + customer.getSystemCustomerNo()+" not found";
+                                System.out.println(contextValueJsonString);
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+                            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
                         }
                     }
                 } else {
                     System.out.println("No handed over customer found...");
+
+
+                    contextName = "AT_HANDED_OVER_CUSTOMERS";
+                    try {
+                        contextValueJsonString ="NO HANDED OVER CUSTOMER FOUND";
+                        System.out.println(contextValueJsonString);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                    captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
 //                    return "No handed over customer found...";
                 }
             } catch (Exception e){
                 common.logErrors("api", "HandoverEmailingController", "addHandedoverCustomers", "Add Handed Over Customers To The List", e.toString());
 //                return e.toString();
+
+            contextName = "ERROR_AT_HANDED_OVER_CUSTOMERS";
+            try {
+                contextValueJsonString = e.toString();
+                System.out.println(contextValueJsonString);
+            } catch (Exception ex) {
+                ex.printStackTrace();
             }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
+        }
         System.out.println("End looping...");
 //        return "End looping...";
     }
@@ -94,11 +160,32 @@ public class HandoverEmailingController {
         common = new Common();
 
         try {
+            contextName = "GENERATED_HANDED_OVER_CUSTOMERS";
+            try {
+                contextValueJsonString ="STARTING NOW...";
+                System.out.println(contextValueJsonString);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
+
             LocalDate date = LocalDate.now();
             List<TempHandedoverCustomersToday> tempHandedoverCustomersTodayList = tempHandedoverCustomersTodayService.getTempHandedoverCustomersTodayByHandoverDate(date);
 
             if(!tempHandedoverCustomersTodayList.isEmpty()){
 //                ArrayList<StringBuilder> stringBuilderArray = new ArrayList<>();
+
+                contextName = "GENERATED_HANDED_OVER_CUSTOMERS_COUNT";
+                try {
+                    contextValueJsonString ="FOUND " +String.valueOf(tempHandedoverCustomersTodayList.size());
+                    System.out.println(contextValueJsonString);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
+
 
                 StringBuilder formattedString = new StringBuilder();
                 String top = "<!doctype html>\n" +
@@ -168,6 +255,16 @@ public class HandoverEmailingController {
 
                 String handedOverCustomers = top.concat(formattedString.toString()).concat(bottom);
 
+
+                contextName = "GENERATED_HANDED_OVER_CUSTOMERS_MAIL_CONTENT";
+                try {
+                    contextValueJsonString = handedOverCustomers;
+                    System.out.println(contextValueJsonString);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
                 try {
                     configData = configDataService.getConfigDataByConfigName("SANLAM_EMAIL_ADDRESS");
                     emailAddress = configData.getConfigValue();
@@ -184,16 +281,50 @@ public class HandoverEmailingController {
                     ConfigData configDataEmail = configDataService.getConfigDataByConfigName("EMAIL_API_URL");
                     emailApiUrl = configDataEmail.getConfigValue();
 
+
+
+                    contextName = "GENERATED_HANDED_OVER_CUSTOMERS_SEND_EMAIL";
+                    try {
+                        contextValueJsonString = "Email API url: "+emailApiUrl;
+                        contextValueJsonString.concat("-- Email Address: "+emailAddress +" -- Subject: "+emailSubject);
+
+                        System.out.println(contextValueJsonString);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                    captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
                     common.sendEmail(emailAddress, emailSubject, emailBody, "1", "", emailApiUrl, "1");
 
                 } catch (Exception e){
                     common.logErrors("api", "HandoverEmailingController", "handedoverCustomers", "Cannot send email for handed over customers to Sanlam", e.toString());
                 }
             } else {
+                contextName = "GENERATED_HANDED_OVER_CUSTOMERS";
+                try {
+                    contextValueJsonString = "No customers found";
+
+                    System.out.println(contextValueJsonString);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
                 System.out.println("No handed over customer found...");
                 return "No handed over customer found...";
             }
         } catch (Exception e){
+
+            contextName = "GENERATED_HANDED_OVER_CUSTOMERS_ERROR";
+            try {
+                contextValueJsonString = "Error : "+e.toString();
+
+                System.out.println(contextValueJsonString);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
             common.logErrors("api", "HandoverEmailingController", "generateHandedoverCustomersList", "Generate Handed Over Customers List", e.toString());
             return e.toString();
         }
