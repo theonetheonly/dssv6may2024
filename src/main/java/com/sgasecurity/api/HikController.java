@@ -1269,7 +1269,7 @@ public class HikController {
                     if(mapStatuses != null) {
 
 
-                        if (mapStatuses.get("status").equals("NOT_ONGOING")) {
+                        if (mapStatuses.get("status").contains("NOT_ONGOING")) {
 
                             emergency.setRescueCallStatus("NOT_ONGOING");
                             emergencyService.saveEmergency(emergency);

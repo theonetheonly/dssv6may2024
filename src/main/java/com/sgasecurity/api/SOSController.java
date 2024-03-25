@@ -71,6 +71,15 @@ public class SOSController {
         try {
 
 
+            contextName = "EVENT_ID_PASSED_TO_CREATE_SOS_REQUEST";
+            try {
+                contextValueJsonString = "Event ID: ["+eventid+"]";
+                System.out.println(contextValueJsonString);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
             String result = createSOSRequest(eventid);
             contextName = "BEFORE_AND_AFTER_CREATESOSREQUEST_FUNCTION_CALL";
             try {
@@ -188,8 +197,8 @@ public class SOSController {
                 try {
                     contextValueJsonString = "Event ID: "+eventid+ " Emergency Data: " + String.valueOf(emergencyData);
                     System.out.println(contextValueJsonString);
-                } catch (Exception e) {
-                    e.printStackTrace();
+                } catch (Exception eS) {
+                    eS.printStackTrace();
                 }
                 captureAuditTrail(contextName, contextDesc, contextValueJsonString);
                 

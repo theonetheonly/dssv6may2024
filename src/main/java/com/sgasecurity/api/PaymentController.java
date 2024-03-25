@@ -214,6 +214,15 @@ public class PaymentController {
             requestBodyJson = "{\"invoice\" : {\"customer_account_code\" : \"" + customerNo + "\", \"invoice_lines\": [{\"description\" : \""+firstDescription+"\"}, {\"stock_code\": \""+pkgName+"\",\"quantity\" : 1,\"selling_price\" : " + paymentAmount + "}, {\"description\" : \""+secondDescription+"\"}]}}";
 
 
+            contextName = "PUSH_OMNI_INVOICE_DATA_AT_OMNI_API_DEPOSIT";
+            try {
+                contextValueJsonString = requestBodyJson;
+                System.out.println(contextValueJsonString);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
             ConfigData configDataOmniAvailability = configDataService.getConfigDataByConfigName("OMNI_AVAILABILITY");
             String omniAvailability = configDataOmniAvailability.getConfigValue();
 

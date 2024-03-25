@@ -662,6 +662,7 @@ public class RecurrentPaymentController {
         }
     }
 
+
     @CrossOrigin
     @GetMapping("/sendduedatecomms")
     @ResponseBody
@@ -988,6 +989,16 @@ public class RecurrentPaymentController {
             return "SUCCESS";
 
         } catch (Exception e) {
+
+            contextName = "ERROR_AT_DUE_DATE_COMMS";
+            try {
+                contextValueJsonString = "At Due Date Return Invoice ID: "+uniqueSiteId;
+                System.out.println(contextValueJsonString);
+            } catch (Exception Xe) {
+                Xe.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
             common.logErrors("api", "RecurrentPaymentController", "sendDueDateComms", "Send Due Date Email And SMS", e.toString());
             return "FAIL2 - " + e.toString();
         }
@@ -2933,6 +2944,16 @@ public void sendSiteReconnectionSMSToCustomer(String phone, String customerName,
             String firstDescription = "Monthly Subscription Service charge for ";
             String secondDescription = "for the period " +finalStartingDateString + " to " + finalNextDateString;
             requestBodyJson = "{\"invoice\" : {\"customer_account_code\" : \"" + customerNo + "\", \"invoice_lines\": [{\"description\" : \"" + firstDescription + "\"}, {\"stock_code\": \"" + pkgName + "\",\"quantity\" : 1,\"selling_price\" : " + paymentAmountExclusive + "}, {\"description\" : \"" + secondDescription + "\"}]}}";
+
+            contextName = "PUSH_OMNI_INVOICE_DATA_AT_OMNI_API_DUE_DATE_RECCUR";
+            try {
+                contextValueJsonString = requestBodyJson;
+                System.out.println(contextValueJsonString);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
 
 //          B. Post Invoice to Omni
             String invoiceNumber = "NO_INVOICE_REF_NUMBER_ASSIGNED";

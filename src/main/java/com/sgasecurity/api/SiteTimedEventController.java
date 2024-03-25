@@ -76,7 +76,7 @@ public class SiteTimedEventController {
 
             timedEventsTracker.setContextName("CURRENT_TIME");
             timedEventsTracker.setContextValue(current_time.toString());
-            timedEventsTrackerRepository.save(timedEventsTracker);
+//            timedEventsTrackerRepository.save(timedEventsTracker);
 
             List<InstallationSite> installationSitesList =  installationSiteRepository.getInstallationSitesReady("DONE");
 
@@ -86,7 +86,7 @@ public class SiteTimedEventController {
             if (installationSitesList.size() > 0)
             {
                 timedEventsTracker = new TimedEventsTracker();
-                timedEventsTracker.setContextName("INSTALLATION_SITES");
+                timedEventsTracker.setContextName("INSTALLATION_SITES_COUNT");
                 timedEventsTracker.setContextValue(Integer.toString(installationSitesList.size()));
                 timedEventsTrackerRepository.save(timedEventsTracker);
 
@@ -96,7 +96,7 @@ public class SiteTimedEventController {
                     SiteTimedEvent siteTimedEventMain = siteTimedEventRepository.getSiteTimedEventRecordbySiteID(unique_site_id);
 
                     timedEventsTracker = new TimedEventsTracker();
-                    timedEventsTracker.setContextName("UNIQUE_SITE_ID");
+                    timedEventsTracker.setContextName("START_UNIQUE_SITE_ID");
                     timedEventsTracker.setContextValue(unique_site_id);
                     timedEventsTrackerRepository.save(timedEventsTracker);
 
@@ -107,26 +107,26 @@ public class SiteTimedEventController {
 
                         timedEventsTracker = new TimedEventsTracker();
                         timedEventsTracker.setContextName("SITE_TIMED_MAIN_EVENT");
-                        timedEventsTracker.setContextValue("NOT_NULL");
-                        timedEventsTrackerRepository.save(timedEventsTracker);
+                        timedEventsTracker.setContextValue(unique_site_id+ " >> NOT_NULL");
+                        timedEventsTrackerRepository.save(timedEventsTracker  );
 
                         timedEventsTracker = new TimedEventsTracker();
                         timedEventsTracker.setContextName("MONTH_COUNT");
-                        timedEventsTracker.setContextValue(Long.toString(month_count));
+                        timedEventsTracker.setContextValue(unique_site_id+ " >> " + Long.toString(month_count));
                         timedEventsTrackerRepository.save(timedEventsTracker);
 
                         Date reference_trigger_date_time = siteTimedEventMain.getReferenceTriggerDateTime();
 
                         timedEventsTracker = new TimedEventsTracker();
                         timedEventsTracker.setContextName("REFERENCE_DATE_TIME_TRIGGER");
-                        timedEventsTracker.setContextValue(reference_trigger_date_time.toString());
+                        timedEventsTracker.setContextValue(unique_site_id + " >> " +reference_trigger_date_time.toString());
                         timedEventsTrackerRepository.save(timedEventsTracker);
 
                         Date last_timed_event_executed_datetime = siteTimedEventMain.getLastTimedEventExecutedDatetime();
 
                         timedEventsTracker = new TimedEventsTracker();
                         timedEventsTracker.setContextName("LAST_TIMED_EVENT_EXECUTED_DATE_TIME");
-                        timedEventsTracker.setContextValue(last_timed_event_executed_datetime.toString());
+                        timedEventsTracker.setContextValue(unique_site_id +" >> " +last_timed_event_executed_datetime.toString());
                         timedEventsTrackerRepository.save(timedEventsTracker);
 
                         long ct = current_time.getTime();
@@ -136,7 +136,7 @@ public class SiteTimedEventController {
 
                         timedEventsTracker = new TimedEventsTracker();
                         timedEventsTracker.setContextName("UPDATED_REF_TIME");
-                        timedEventsTracker.setContextValue(Long.toString(updated_ref_time));
+                        timedEventsTracker.setContextValue(unique_site_id + ">> " +Long.toString(updated_ref_time));
                         timedEventsTrackerRepository.save(timedEventsTracker);
 
                         System.out.println("UPDATED REF TIME: "+updated_ref_time);
@@ -144,7 +144,7 @@ public class SiteTimedEventController {
 
                         timedEventsTracker = new TimedEventsTracker();
                         timedEventsTracker.setContextName("ELAPSED_TIME_MILLISECONDS");
-                        timedEventsTracker.setContextValue(Long.toString(elapsed_time));
+                        timedEventsTracker.setContextValue(unique_site_id + " >> " + Long.toString(elapsed_time));
                         timedEventsTrackerRepository.save(timedEventsTracker);
 
                         long divide_denominator = 1000 * 60;
@@ -152,14 +152,14 @@ public class SiteTimedEventController {
 
                         timedEventsTracker = new TimedEventsTracker();
                         timedEventsTracker.setContextName("ELAPSED_TIME_MINUTES");
-                        timedEventsTracker.setContextValue(Long.toString(elapsed_time_minutes));
+                        timedEventsTracker.setContextValue(unique_site_id+ " >> "+ Long.toString(elapsed_time_minutes));
                         timedEventsTrackerRepository.save(timedEventsTracker);
 
                         System.out.println("ELAPSED TIME IN MINUTES: "+elapsed_time_minutes);
 
                         timedEventsTracker = new TimedEventsTracker();
                         timedEventsTracker.setContextName("CURRENT_NUMERIC_POSITION");
-                        timedEventsTracker.setContextValue(Long.toString(currentNumericPosition));
+                        timedEventsTracker.setContextValue(unique_site_id + " >> " +Long.toString(currentNumericPosition));
                         timedEventsTrackerRepository.save(timedEventsTracker);
 
                         long tplus24ToleranceDiffLower = tolerance - TPLUS24;
@@ -172,7 +172,7 @@ public class SiteTimedEventController {
                                 {
                                     timedEventsTracker = new TimedEventsTracker();
                                     timedEventsTracker.setContextName("TPLUS24-TOLERANCE-EXECUTED");
-                                    timedEventsTracker.setContextValue(String.valueOf(tplus24ToleranceDiffLower).concat(" --- ").concat(String.valueOf(tplus24ToleranceDiffUpper).concat(" --- ").concat(String.valueOf(TPLUS24))));
+                                    timedEventsTracker.setContextValue(unique_site_id+ " >> "+ String.valueOf(tplus24ToleranceDiffLower).concat(" --- ").concat(String.valueOf(tplus24ToleranceDiffUpper).concat(" --- ").concat(String.valueOf(TPLUS24))));
                                     timedEventsTrackerRepository.save(timedEventsTracker);
 
                                     // Do update code tor 24hr
@@ -185,17 +185,30 @@ public class SiteTimedEventController {
 
                                     timedEventsTracker = new TimedEventsTracker();
                                     timedEventsTracker.setContextName("PAYMENT-STATUS-TPLUS24");
-                                    timedEventsTracker.setContextValue(Boolean.toString(ctlps));
+                                    timedEventsTracker.setContextValue(unique_site_id+" >> "+Boolean.toString(ctlps));
                                     timedEventsTrackerRepository.save(timedEventsTracker);
 
                                     if(ctlps){
                                         // Payment is done, no need to do anything except check HIK site enable/disable status
                                         // If site is diasbled - enable and exit case
 
+
+                                        timedEventsTracker = new TimedEventsTracker();
+                                        timedEventsTracker.setContextName("PAYMENT-STATUS-TPLUS24");
+                                        timedEventsTracker.setContextValue(unique_site_id+" >> ALREADY PAID ");
+                                        timedEventsTrackerRepository.save(timedEventsTracker);
                                         System.out.println("24hr paid already... do nothing");
+
                                     } else {
+                                        timedEventsTracker = new TimedEventsTracker();
+                                        timedEventsTracker.setContextName("PAYMENT-STATUS-TPLUS24");
+                                        timedEventsTracker.setContextValue(unique_site_id+" >> NOT PAID SHOULD DISCONNECT ");
+                                        timedEventsTrackerRepository.save(timedEventsTracker);
+                                        System.out.println("24hr paid already... do nothing");
+
                                         // Send 24hr notification
- //                                     EXECUTE THE T24 RELATED TASKS NOW -  EG SEND MAIL
+ //
+                                        //                                     EXECUTE THE T24 RELATED TASKS NOW -  EG SEND MAIL
 //                                      String apiUrl = apiAppUrl+"/send24hrcomms?uniqueSiteId=" + unique_site_id;
                                         String apiUrl = apiAppUrl+"/send24hrcomms?uniqueSiteId="+unique_site_id;
                                         String response = restTemplate.getForObject(apiUrl, String.class);
@@ -203,7 +216,7 @@ public class SiteTimedEventController {
 
                                             timedEventsTracker = new TimedEventsTracker();
                                             timedEventsTracker.setContextName("SEND-TPLUS24");
-                                            timedEventsTracker.setContextValue("SUCCESS");
+                                            timedEventsTracker.setContextValue(unique_site_id+ " >> "+"SUCCESS");
                                             timedEventsTrackerRepository.save(timedEventsTracker);
 
                                             System.out.println("Successfully sent 24 hour email and SMS");
@@ -211,7 +224,7 @@ public class SiteTimedEventController {
 
                                             timedEventsTracker = new TimedEventsTracker();
                                             timedEventsTracker.setContextName("SEND-TPLUS24");
-                                            timedEventsTracker.setContextValue("FAIL");
+                                            timedEventsTracker.setContextValue(unique_site_id + ">> FAIL");
                                             timedEventsTrackerRepository.save(timedEventsTracker);
 
                                             common.logErrors("api", "SiteTimedEventController", "executeTimerEventsLoop", "Send 24 Hour Email And SMS", "Failed to send 24 hour email and SMS (if else block)");
@@ -225,7 +238,7 @@ public class SiteTimedEventController {
                                 {
 //                                  Do update code tor 552hr
                                     siteTimedEventMain.setLastTimedEventNumericPosition(2);
-                                    siteTimedEventMain.setLastTimedEventExecutedName("TPLUS552");
+                                    siteTimedEventMain.setLastTimedEventExecutedName("START_TPLUS552");
                                     siteTimedEventMain.setLastTimedEventExecutedDatetime(current_time);
                                     siteTimedEventRepository.save(siteTimedEventMain);
 
@@ -237,14 +250,14 @@ public class SiteTimedEventController {
 
                                             timedEventsTracker = new TimedEventsTracker();
                                             timedEventsTracker.setContextName("SEND-TPLUS552");
-                                            timedEventsTracker.setContextValue("SUCCESS");
+                                            timedEventsTracker.setContextValue(unique_site_id+ " >> SUCCESS");
                                             timedEventsTrackerRepository.save(timedEventsTracker);
 
                                             System.out.println("Successfully sent 7 days before due date email and SMS");
                                         } else {
                                             timedEventsTracker = new TimedEventsTracker();
                                             timedEventsTracker.setContextName("SEND-TPLUS552");
-                                            timedEventsTracker.setContextValue("FAIL");
+                                            timedEventsTracker.setContextValue(unique_site_id+ " >> FAIL");
                                             timedEventsTrackerRepository.save(timedEventsTracker);
 
                                             common.logErrors("api", "SiteTimedEventController", "executeTimerEventsLoop", "Send 7 Days Before Due Date email And SMS", "Failed to send 7 days before due date email and SMS (if else block)");
@@ -260,7 +273,7 @@ public class SiteTimedEventController {
                                 {
 //                                  Do update code tor 720Hr
                                     siteTimedEventMain.setLastTimedEventNumericPosition(0);
-                                    siteTimedEventMain.setLastTimedEventExecutedName("TPLUS720");
+                                    siteTimedEventMain.setLastTimedEventExecutedName("START_TPLUS720");
                                     siteTimedEventMain.setLastTimedEventExecutedDatetime(current_time);
                                     siteTimedEventMain.setIsPaid("NOT_PAID");
 
@@ -279,10 +292,15 @@ public class SiteTimedEventController {
 
                                     timedEventsTracker = new TimedEventsTracker();
                                     timedEventsTracker.setContextName("PAYMENT-STATUS-TPLUS720");
-                                    timedEventsTracker.setContextValue(Boolean.toString(ctlps));
+                                    timedEventsTracker.setContextValue(unique_site_id+ " >> " + Boolean.toString(ctlps));
                                     timedEventsTrackerRepository.save(timedEventsTracker);
 
                                     if(ctlps){
+                                        timedEventsTracker = new TimedEventsTracker();
+                                        timedEventsTracker.setContextName("PAYMENT-STATUS-TPLUS720");
+                                        timedEventsTracker.setContextValue(unique_site_id+ " ALREADY PAID - DO NOTHING");
+                                        timedEventsTrackerRepository.save(timedEventsTracker);
+
                                         // Payment is done, no need to do anything except check HIK site enable/disable status
                                         // If site is diasbled - enable and exit case
                                         System.out.println("24hr paid already... do nothing");
@@ -294,14 +312,14 @@ public class SiteTimedEventController {
                                         if (response.equals("SUCCESS")) {
                                             timedEventsTracker = new TimedEventsTracker();
                                             timedEventsTracker.setContextName("SEND-TPLUS720");
-                                            timedEventsTracker.setContextValue("SUCCESS");
+                                            timedEventsTracker.setContextValue(unique_site_id+ ">> SUCCESS");
                                             timedEventsTrackerRepository.save(timedEventsTracker);
 
                                             System.out.println("Successfully sent due date email and SMS");
                                         } else {
                                             timedEventsTracker = new TimedEventsTracker();
                                             timedEventsTracker.setContextName("SEND-TPLUS720");
-                                            timedEventsTracker.setContextValue("FAIL");
+                                            timedEventsTracker.setContextValue(unique_site_id+ " >> FAIL");
                                             timedEventsTrackerRepository.save(timedEventsTracker);
 
                                             common.logErrors("api", "SiteTimedEventController", "executeTimerEventsLoop", "Send Due Date Email And SMS", "Failed to send due date email and SMS (if else block)");
@@ -334,7 +352,7 @@ public class SiteTimedEventController {
 
                         timedEventsTracker = new TimedEventsTracker();
                         timedEventsTracker.setContextName("HANDOVER-EVENT");
-                        timedEventsTracker.setContextValue("SUCCESS");
+                        timedEventsTracker.setContextValue(unique_site_id+ " >> SUCCESS");
                         timedEventsTrackerRepository.save(timedEventsTracker);
                     }
                 }
