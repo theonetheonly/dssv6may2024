@@ -733,9 +733,36 @@ public class RecurrentPaymentController {
 
             Map<String, String> postInvoiceResponse = postInvoiceToOmniAtDueDate(tokenId, installationSite.getNextPaymentDate());
 
+
+            String currentOmniInvoiceNo = "NOT-GENERATED";
+            try{
+
+                currentOmniInvoiceNo = postInvoiceResponse.get("invoiceNumber");
+                contextName = "AT_DUE_DATE_OMNI_INVOICE_NUM_SUCCESS";
+                try {
+                    contextValueJsonString = "SUCCESS TO GET INVOICE NO FOR "+customerNo+ " "+currentOmniInvoiceNo;
+                    System.out.println(contextValueJsonString);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+                captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
+            }
+            catch (Exception ex)
+            {
+                contextName = "AT_DUE_DATE_OMNI_INVOICE_NUM_FAIL";
+                try {
+                    contextValueJsonString = "FAILED TO GET INVOICE NO FOR "+customerNo;
+                    System.out.println(contextValueJsonString);
+                } catch (Exception ext) {
+                    ext.printStackTrace();
+                }
+                captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+            }
+
             long newInvoiceId = saveInvoice(tokenId, paymentAmountInclusive, postInvoiceResponse.get("invoiceNumber"), customerNo, installationSite.getId(), packageType.getId(), postInvoiceResponse.get("invoiceResponse"), postInvoiceResponse.get("narrative"), monthCounter);
 
-            contextName = "AT_DUE_DATE_RETURN_INVOICE_ID";
+            contextName = "AT_DUE_DATE_RETURN_CENTRAD_DB_INVOICE_ID";
             try {
                 contextValueJsonString = "At Due Date Return Invoice ID: "+newInvoiceId;
                 System.out.println(contextValueJsonString);
@@ -771,9 +798,15 @@ public class RecurrentPaymentController {
                 String dpoRedirectUrl = configData.getConfigValue();
                 configData = configDataService.getConfigDataByConfigName("DPO_BACK_URL");
                 String dpoBackUrl = configData.getConfigValue();
-
                 String timestamp = common.getTheTimestamp();
-                String dynamicCompanyRef = "RECUR-" + String.valueOf(customerId) + "-" + timestamp;
+
+
+
+//                String dynamicCompanyRef = "RECUR-" + String.valueOf(customerId) + "-" + timestamp;
+
+
+
+                String dynamicCompanyRef = customer.getSystemCustomerNo() + " MONTH-" + String.valueOf(monthCounter) + " INVID-" + newInvoiceId + " OMNIINV-" + currentOmniInvoiceNo;
 
                 configData = configDataService.getConfigDataByConfigName("DSS_COUNTRY");
                 String dssCountry = configData.getConfigValue();

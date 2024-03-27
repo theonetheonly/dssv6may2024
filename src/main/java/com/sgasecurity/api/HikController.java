@@ -255,7 +255,7 @@ public class HikController {
 
 
             String timestamp = common.getTheTimestamp();
-            String companyRef = "CUSTOMER-" + customer.getSystemCustomerNo() + " MONTH-" + String.valueOf(monthNo) + " INVID-" + newInvoiceId + " OMNIINV" + omniInvoiceNo;
+            String companyRef = customer.getSystemCustomerNo() + " MONTH-" + String.valueOf(monthNo) + " INVID-" + newInvoiceId + " OMNIINV-" + omniInvoiceNo;
 //            String dynamicCompanyRef = "FIRSTMONTH-"+ customerId +"-"+ timestamp;
 
             double vat = packageType.getVatRate();
