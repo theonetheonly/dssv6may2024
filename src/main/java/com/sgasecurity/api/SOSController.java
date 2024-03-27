@@ -258,8 +258,6 @@ public class SOSController {
             }
 
 
-
-
             String payloadString = "{\"source\": \"SGA App\", \"location\": {\"latitude\": \"" + latitude + "\",\"longitude\": \"" + longitude + "\",    \"measuredAt\": \"" + measuredAt + "\",    \"provider\": \"GPS\"  },  \"phoneNumber\": {\"countryCode\": \"254\", \"description\": \"Mobile phone number.\", \"nationalNumber\": \"" + phoneNo + "\"  },  \"caller\": {\"memberId\": \"" + rescueMemberId + "\", \"firstName\": \"" + firstName + "\",\"lastName\": \"" + lastName + "\",\"otherNames\": \"" + otherNames + "\"},\"address\": \"" + address + "\",\"issue\":\"SGA Kenya Customer Emergency Call\"}";
 
             try {
