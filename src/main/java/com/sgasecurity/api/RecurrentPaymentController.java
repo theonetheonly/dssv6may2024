@@ -72,6 +72,9 @@ public class RecurrentPaymentController {
     String bitlyUrl = null;
     DPOPaymentRequest dpoPaymentRequest = null;
     String payToken = null;
+
+    String dpoTransRef = "";
+
     DPOPaymentResponse dpoResponse = null;
     double paymentAmount = 0;
     double paymentAmountInclusive = 0;
@@ -800,11 +803,7 @@ public class RecurrentPaymentController {
                 String dpoBackUrl = configData.getConfigValue();
                 String timestamp = common.getTheTimestamp();
 
-
-
 //                String dynamicCompanyRef = "RECUR-" + String.valueOf(customerId) + "-" + timestamp;
-
-
 
                 String dynamicCompanyRef = customer.getSystemCustomerNo() + " MONTH-" + String.valueOf(monthCounter) + " INVID-" + newInvoiceId + " OMNIINV-" + currentOmniInvoiceNo;
 
@@ -859,12 +858,19 @@ public class RecurrentPaymentController {
             }
 
             try {
-                dpoResponse = dpoService.makeMonthlyPayment(dpoPaymentRequest);
-                payToken = dpoResponse.getTransToken();
 
-                contextName = "AT_DUE_DATE_GENERATE_DPO_TOKEN";
+
+                /// DPO make payment request ///
+                /// ======================= ///
+                dpoResponse = dpoService.makeMonthlyPayment(dpoPaymentRequest);
+
+                payToken = dpoResponse.getTransToken();
+                dpoTransRef=  dpoResponse.getTransRef();
+
+
+                contextName = "AT_DUE_DATE_GENERATE_DPO_TOKEN_AND_TRANS_REF";
                 try {
-                    contextValueJsonString = payToken;
+                    contextValueJsonString = customer.getSystemCustomerNo() +" " +payToken+ " "+dpoTransRef ;
                     System.out.println(contextValueJsonString);
                 } catch (Exception ex) {
                     ex.printStackTrace();
@@ -887,7 +893,9 @@ public class RecurrentPaymentController {
                 shortenedPaymentUrl = paymentURL;
             }
 
-            PaymentLink paymentLinkResponseObj = savePaymentLinkRecord(customerNo, shortenedPaymentUrl, tokenId, paymentAmountInclusive, newInvoiceId, monthCounter);
+        //    PaymentLink paymentLinkResponseObj = savePaymentLinkRecord(customerNo, shortenedPaymentUrl, tokenId, paymentAmountInclusive, newInvoiceId, monthCounter);
+
+            PaymentLink paymentLinkResponseObj = savePaymentLinkRecordType2(customerNo, shortenedPaymentUrl, tokenId, paymentAmountInclusive, newInvoiceId, monthCounter, dpoTransRef);
 
             long paymentLinkId = -1;
 
@@ -1098,6 +1106,9 @@ public class RecurrentPaymentController {
 
         paymentLink = paymentLinkService.getPaymentLink(customerNo, tokenId);
 
+
+
+
         String paymentLinkIdToOmni = String.valueOf(paymentLink.getId());
 
         if ((paymentLink.getIsUsed()).equals("NO")) {
@@ -1206,8 +1217,6 @@ public class RecurrentPaymentController {
 
             String newTransactionNo = "NOT_YET_ASSIGNED";
 
-
-
             payLinkForBalances = getPayLinkForBalances(customerNo);
             payLinkForBalancesForSMS = getPayLinkForBalancesForSMS(customerNo);
 
@@ -1255,11 +1264,19 @@ public class RecurrentPaymentController {
                         sendFailureEmail(emailSubject, emailBody, emailApiUrl);
                     }
 
-                    dpoToOmniTransactionalNo = postPaymentFromDPOToOmni(omniDepositBankAccount, todayFormatYYYYMD, customer, packageType, invoiceNumber, companyName, omniUsername, omniPassword, omniUrl, emailApiUrl, paymentLinkIdToOmni);
+                    String dpoPaymentReference = String.valueOf(paymentLink.getId());
+
+                        if(paymentLink.getDpotransref() != null)
+                        {
+                            dpoPaymentReference = paymentLink.getDpotransref()+ "-"+ dpoPaymentReference;
+                        }
+
+
+                    dpoToOmniTransactionalNo = postPaymentFromDPOToOmni(omniDepositBankAccount, todayFormatYYYYMD, customer, packageType, invoiceNumber, companyName, omniUsername, omniPassword, omniUrl, emailApiUrl, dpoPaymentReference);
 
                     contextName = "AT_PAY_POST_PAYMENT_FROM_DPO_TO_OMNI";
                     try {
-                        contextValueJsonString = dpoToOmniTransactionalNo;
+                        contextValueJsonString = dpoToOmniTransactionalNo+" - " + dpoPaymentReference;
                         System.out.println(contextValueJsonString);
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -1421,7 +1438,11 @@ public class RecurrentPaymentController {
                             sendSiteReconnectionEmailToCustomer(customer.getEmail(), customerName, emailApiUrl);
                             sendSiteReconnectionSMSToCustomer(customer.getPhone(), customerName, smsApiUrl);
                         }
+                        else{
+                            // Check if last event was t+24
 
+
+                        }
                         // Send reconnection email
                         sendSiteEnableEmailToFinance(installationSite.getHikFormattedCustomerSiteName(), emailApiUrl);
                         sendSiteEnableEmailToTechnicalLead(installationSite.getHikFormattedCustomerSiteName(), emailApiUrl);
@@ -2278,8 +2299,32 @@ public void sendSiteReconnectionSMSToCustomer(String phone, String customerName,
                     "\"target_ledger_account\" : \"" + customer.getSystemCustomerNo() + "\",\n" +
                     "\"target_ledger_amount\" : -" + packageType.getMonthlyCostInclusive() + ",\n" +
                     "\"pre_allocations\" : [{\"module\" : \"Invoice\" ,  \"reference\" : \"" + invoiceNumber + "\"}] }]}}";
-        }
+
+
+
+            contextName = "AT_SEND_PAYMENT_DETAILS_TO_OMNI";
+            try {
+                contextValueJsonString = customer.getSystemCustomerNo().toString()+" -- "+requestBodyJson;
+                System.out.println(contextValueJsonString);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
+
+    }
        catch (Exception e){
+
+
+           contextName = "AT_SEND_PAYMENT_DETAILS_TO_OMNI_FAILED";
+           try {
+               contextValueJsonString = customer.getSystemCustomerNo().toString()+" -- "+e.toString();
+               System.out.println(contextValueJsonString);
+           } catch (Exception ex) {
+               ex.printStackTrace();
+           }
+           captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
            common.logErrors("api", "RecurrentPaymentController", "pay", "Post Payment (Monthly) from DPO to Omni", e.toString());
 //          Send failure email
            String emailSubject = "DSS - Failed To Create Payment (Monthly) Object from DPO to Omni";
@@ -2342,6 +2387,14 @@ public void sendSiteReconnectionSMSToCustomer(String phone, String customerName,
             return result;
 
         } catch (Exception e) {
+
+            contextName = "AT_PAY_CAPTURE_POST_DATA_INSIDE_THE_postingPaymentFromDPOToOmni_FUNCTION_FAILED";
+            try {
+                contextValueJsonString = e.toString();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
             common.logErrors("api", "RecurrentPaymentController", "postingPaymentFromDPOToOmni", "Post Payment From DPO To Omni", e.toString());
             return e.toString();
         }
@@ -3034,6 +3087,56 @@ public void sendSiteReconnectionSMSToCustomer(String phone, String customerName,
             map.put("invoiceResponse", "Error: "+e.toString());
             map.put("narrative", narrative);
             return map;
+        }
+    }
+
+    public PaymentLink savePaymentLinkRecordType2(String customerNo, String shortenedPaymentUrl, String tokenId, double paymentAmount, long invoiceId, int monthCounter, String dpoTransRef) {
+        common = new Common();
+        try {
+            contextName = "AT_DUE_DATE_RECURRENT_TOKENIZED_AMOUNT";
+            try {
+                contextValueJsonString = "Customer No. "+ customerNo + " Amount "+paymentAmount;
+                System.out.println(contextValueJsonString);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
+            PaymentLink paymentLink = new PaymentLink();
+            paymentLink.setSystemCustomerNo(customerNo);
+            paymentLink.setLink(shortenedPaymentUrl);
+            paymentLink.setTokenId(tokenId);
+            paymentLink.setIsUsed("NO");
+            paymentLink.setAmount(paymentAmount);
+            paymentLink.setInvoiceId(invoiceId);
+            paymentLink.setMonthCount(monthCounter);
+            paymentLink.setDpotransref(dpoTransRef);
+            paymentLinkService.savePaymentLink(paymentLink);
+
+            contextName = "AT_DUE_DATE_SAVE_PAYMENT_LINK_RECORD";
+            try {
+                contextValueJsonString = objectMapper.writeValueAsString(paymentLink);
+                System.out.println(contextValueJsonString);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
+            return paymentLink;
+
+        } catch (Exception e) {
+            common.logErrors("api", "RecurrentPaymentController", "sendDueDateComms", "Save PaymentLink Data", e.toString());
+
+            contextName = "AT_DUE_DATE_SAVE_PAYMENT_LINK_RECORD_FAILED";
+            try {
+                contextValueJsonString = e.toString();
+                System.out.println(contextValueJsonString);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
+            return null;
         }
     }
 

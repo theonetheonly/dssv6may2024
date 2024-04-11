@@ -28,6 +28,11 @@ public class PaymentLink {
     @Column(name = "timestamp")
     private Timestamp timestamp;
 
+    @Column(name = "dpotransref")
+    private String dpotransref;
+
+
+
     public PaymentLink() {
     }
 
@@ -41,6 +46,20 @@ public class PaymentLink {
         this.invoiceId = invoiceId;
         this.monthCount = monthCount;
         this.timestamp = timestamp;
+    }
+
+
+    public PaymentLink(long id, String systemCustomerNo, String link, String tokenId, double amount, String isUsed, long invoiceId, int monthCount, Timestamp timestamp, String dpotransref) {
+        this.id = id;
+        this.systemCustomerNo = systemCustomerNo;
+        this.link = link;
+        this.tokenId = tokenId;
+        this.amount = amount;
+        this.isUsed = isUsed;
+        this.invoiceId = invoiceId;
+        this.monthCount = monthCount;
+        this.timestamp = timestamp;
+        this.dpotransref = dpotransref;
     }
 
     public long getId()
@@ -105,5 +124,13 @@ public class PaymentLink {
     }
     public void setTimestamp(Timestamp timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public String getDpotransref() {
+        return dpotransref;
+    }
+
+    public void setDpotransref(String dpotransref) {
+        this.dpotransref = dpotransref;
     }
 }

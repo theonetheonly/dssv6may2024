@@ -150,9 +150,26 @@ public class SiteTimedEventController {
                         long divide_denominator = 1000 * 60;
                         long elapsed_time_minutes = elapsed_time/divide_denominator;
 
+
+
                         timedEventsTracker = new TimedEventsTracker();
                         timedEventsTracker.setContextName("ELAPSED_TIME_MINUTES");
                         timedEventsTracker.setContextValue(unique_site_id+ " >> "+ Long.toString(elapsed_time_minutes));
+                        timedEventsTrackerRepository.save(timedEventsTracker);
+
+
+                        long elapsed_time_hours =  elapsed_time_minutes /60;
+
+                        timedEventsTracker = new TimedEventsTracker();
+                        timedEventsTracker.setContextName("ELAPSED_TIME_HOURS");
+                        timedEventsTracker.setContextValue(unique_site_id+ " >> "+ Long.toString(elapsed_time_hours));
+                        timedEventsTrackerRepository.save(timedEventsTracker);
+
+                        long elapsed_time_days = elapsed_time_hours / 24;
+
+                        timedEventsTracker = new TimedEventsTracker();
+                        timedEventsTracker.setContextName("ELAPSED_TIME_DAYS");
+                        timedEventsTracker.setContextValue(unique_site_id+ " >> "+ Long.toString(elapsed_time_days));
                         timedEventsTrackerRepository.save(timedEventsTracker);
 
                         System.out.println("ELAPSED TIME IN MINUTES: "+elapsed_time_minutes);
@@ -238,7 +255,7 @@ public class SiteTimedEventController {
                                 {
 //                                  Do update code tor 552hr
                                     siteTimedEventMain.setLastTimedEventNumericPosition(2);
-                                    siteTimedEventMain.setLastTimedEventExecutedName("START_TPLUS552");
+                                    siteTimedEventMain.setLastTimedEventExecutedName("TPLUS552");
                                     siteTimedEventMain.setLastTimedEventExecutedDatetime(current_time);
                                     siteTimedEventRepository.save(siteTimedEventMain);
 
@@ -273,7 +290,7 @@ public class SiteTimedEventController {
                                 {
 //                                  Do update code tor 720Hr
                                     siteTimedEventMain.setLastTimedEventNumericPosition(0);
-                                    siteTimedEventMain.setLastTimedEventExecutedName("START_TPLUS720");
+                                    siteTimedEventMain.setLastTimedEventExecutedName("TPLUS720");
                                     siteTimedEventMain.setLastTimedEventExecutedDatetime(current_time);
                                     siteTimedEventMain.setIsPaid("NOT_PAID");
 

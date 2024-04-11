@@ -70,6 +70,9 @@ public class HikController {
     String emailApiUrl = null;
     String bitlyToken = null;
     String bitlyUrl = null;
+
+    String dpoTransRef = "";
+
     DPOPaymentRequest dpoPaymentRequest = null;
     @Autowired
     DPOService dpoService;
@@ -286,8 +289,16 @@ public class HikController {
             String dpoRedirectUrlFull = dpoRedirectUrl + pathUrl;
             dpoPaymentRequest = common.getDPORequest(firstName, lastName, townCity, fullName, email, phone, packageTypeName, paymentAmount, dpoRedirectUrlFull, dpoBackUrl, vat, dpoMarkup, expiryPeriod, tokenId, customerId, companyRef, dpoCompanyToken, dpoCurrency, dssCountry, dpoServiceType);
 
+
+
+
             dpoResponse = dpoService.makeMonthlyPayment(dpoPaymentRequest);
+
             payToken = dpoResponse.getTransToken();
+
+            dpoTransRef = dpoResponse.getTransRef();
+
+
 
             String paymentURL = "https://secure.3gdirectpay.com/payv3.php?ID=" + payToken;
 
@@ -344,6 +355,44 @@ public class HikController {
             paymentLink.setAmount(paymentAmount);
             paymentLink.setInvoiceId(invoiceId);
             paymentLink.setMonthCount(1); // First month
+            paymentLinkService.savePaymentLink(paymentLink);
+
+            contextName = "SAVE_PAYMENT_LINK_DETAILS";
+            try {
+                contextValueJsonString = objectMapper.writeValueAsString(paymentLink);
+                System.out.println(contextValueJsonString);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            captureAuditTrail(contextName, contextDesc, contextValueJsonString);
+
+            return paymentLink.getId();
+        } catch (Exception e){
+            ConfigData configDataEmail = configDataService.getConfigDataByConfigName("EMAIL_API_URL");
+            String emailApiUrl = configDataEmail.getConfigValue();
+            ConfigData configData = configDataService.getConfigDataByConfigName("FAILURE_EMAIL");
+            String emailAddress = configData.getConfigValue();
+            String emailSubject = "DSS - Failed To Save Payment Link";
+            String emailBody = "Sorry. Failed to save payment link for customer with customer number "+customerNo+". The invoice ID is "+invoiceId+"\nSee the error:\n "+e.toString();
+            sendFailureEmail(emailSubject, emailBody);
+
+            common.logErrors("api", "HikController", "sendEvent", "Save Payment Link Record", e.toString());
+            return -1;
+        }
+    }
+
+
+    public long savePaymentLinkType2(String customerNo, String tokenId, long invoiceId, String shortenedPaymentUrl, double paymentAmount, String dpoTransReference){
+        try {
+            PaymentLink paymentLink = new PaymentLink();
+            paymentLink.setSystemCustomerNo(customerNo);
+            paymentLink.setTokenId(tokenId);
+            paymentLink.setLink(shortenedPaymentUrl);
+            paymentLink.setIsUsed("NO");
+            paymentLink.setAmount(paymentAmount);
+            paymentLink.setInvoiceId(invoiceId);
+            paymentLink.setMonthCount(1); // First month
+            paymentLink.setDpotransref(dpoTransReference);
             paymentLinkService.savePaymentLink(paymentLink);
 
             contextName = "SAVE_PAYMENT_LINK_DETAILS";
@@ -754,20 +803,28 @@ public class HikController {
 
                     String dPOPaymentLink = generateDPOPaymentLink(1, customer,  newInvoiceId,  omniInvoiceNo,  paymentAmount, tokenId);
 
-                    contextName = "RETURNED DPO PAYMENT LINK";
                     try {
-                        contextValueJsonString = "The generateDPOPaymentLink Function Returned "+dPOPaymentLink;
+                        Thread.sleep(1000);
+                    }
+                    catch (Exception tse)
+                    {
+
+                    }
+                    contextName = "RETURNED_DPO_PAYMENT_LINK";
+                    try {
+                        contextValueJsonString = customerNo +" DPO LINK ID :"+ dPOPaymentLink +" Trans Ref: "+dpoTransRef ;
                         System.out.println(contextValueJsonString);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                     captureAuditTrail(contextName, contextDesc, contextValueJsonString);
 
-                    long paymentLinkId = savePaymentLink(customerNo, tokenId, newInvoiceId, dPOPaymentLink, paymentAmount);
+                    long paymentLinkId = savePaymentLinkType2(customerNo, tokenId, newInvoiceId, dPOPaymentLink, paymentAmount, this.dpoTransRef);
 
-                    contextName = "RETURNED DPO PAYMENT LINK ID";
+
+                    contextName = "RETURNED_SAVED_PAYMENT_LINK_RECORD_ID";
                     try {
-                        contextValueJsonString = "The savePaymentLink Function Returned "+paymentLinkId;
+                        contextValueJsonString =  customerNo + "  PAYMENT TABLE ID: "+paymentLinkId;
                         System.out.println(contextValueJsonString);
                     } catch (Exception e) {
                         e.printStackTrace();
