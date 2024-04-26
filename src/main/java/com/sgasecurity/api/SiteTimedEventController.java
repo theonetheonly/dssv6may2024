@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -100,6 +101,34 @@ public class SiteTimedEventController {
                     timedEventsTracker.setContextValue(unique_site_id);
                     timedEventsTrackerRepository.save(timedEventsTracker);
 
+
+
+                    /// escape KE0000
+
+/*                    if (unique_site_id.contains("KE000029"))
+                    {
+                        timedEventsTracker = new TimedEventsTracker();
+                        timedEventsTracker.setContextName("ESCAPE_SITE");
+                        timedEventsTracker.setContextValue("Special condition to escape site:: "+unique_site_id);
+                        timedEventsTrackerRepository.save(timedEventsTracker);
+
+
+                        LocalDate thisSiteHandoverDate  =  installationSite.getHandoverDate();
+                        LocalDate currentLocalDate = LocalDate.now();
+
+                        // Get the handover date
+                        // get current date
+                        // get difference
+                        // if difference  < 85 days
+
+                        return "";
+
+
+
+                    }
+
+
+ */
                     if (siteTimedEventMain != null) {
                         // Loop through and get the values of this record
                         int currentNumericPosition = siteTimedEventMain.getLastTimedEventNumericPosition();
@@ -349,6 +378,10 @@ public class SiteTimedEventController {
                                 default:
                                 break;
                         }
+
+
+
+
                     } else {
                         // Create a record in the site timed event
                         Date referenceTriggerDateTime = new Date();

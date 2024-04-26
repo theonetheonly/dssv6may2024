@@ -361,6 +361,22 @@ public class Common {
         }
     }
 
+
+    public void logTraces(String traceTitle, String traceContent) {
+        String filePath = "/opt/dssfiles/traces.log";
+        try {
+            FileWriter writer = new FileWriter(filePath, true);
+            LocalDateTime now = LocalDateTime.now();
+            writer.write("Trace Time: "+now+"\n");
+            writer.write("Trace Title: "+traceTitle+"\n");
+            writer.write("Trace Content: "+traceContent+"\n");
+            writer.write("\n\n");
+            writer.close();
+        } catch (IOException e) {
+
+        }
+    }
+
     public String getTheTimestamp() {
         try {
             LocalDateTime now = LocalDateTime.now();

@@ -165,7 +165,10 @@ public class PaymentController {
 
             LocalDate startingDate = LocalDate.now();
             String finalStartingDateString =  dateFunctions.doFormatDate(3, startingDate);
+
             nextPaymentDate = dateFunctions.getNextAnniversayReturnDate(startingDate);
+
+
             String finalNextDateString= dateFunctions.doFormatDate(3, nextPaymentDate);
 
             /*

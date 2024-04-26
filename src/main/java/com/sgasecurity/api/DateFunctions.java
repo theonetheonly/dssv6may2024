@@ -9,6 +9,7 @@ import java.util.Locale;
 public class DateFunctions {
     // Class to manage date functions
 
+    Common common = new Common();
 
     public String getNextAnniversayReturnString(LocalDate mydate)
     {
@@ -27,8 +28,8 @@ public class DateFunctions {
             int monthNoInt = Integer.parseInt(monthNo);
 
             // Force days and year
-            dayNoInt = 31;
-            monthNoInt =3;
+        //    dayNoInt = 31;
+//            monthNoInt =3;
 
             int nextMonthInt = monthNoInt + 1;
             int yearNoInt = Integer.parseInt(yearNo);
@@ -88,49 +89,82 @@ public class DateFunctions {
 
     public LocalDate getNextAnniversayReturnDate(LocalDate mydate)
     {
+
+
         try {
             //               LocalDate mydate = LocalDate.now();
             System.out.println(mydate);
             String dataString = String.valueOf(mydate);
 
+            System.out.println("Initial date: "+ mydate);
+
             String[] dateParts = dataString.split("-");
+
             String dayNo = dateParts[2];
+            System.out.println("Day No: "+ dayNo);
+
             String monthNo = dateParts[1];
+            System.out.println("Month No: "+ monthNo);
+
             String yearNo = dateParts[0];
+            System.out.println("Year No: "+ yearNo);
 
 
             int dayNoInt = Integer.parseInt(dayNo);
+
+
+
             int monthNoInt = Integer.parseInt(monthNo);
 
             // Force days and year
-            dayNoInt = 31;
-            monthNoInt =3;
+            //     dayNoInt = 31;
+            //   monthNoInt =3;
+
+
+            //
 
             int nextMonthInt = monthNoInt + 1;
+
             int yearNoInt = Integer.parseInt(yearNo);
+
+            System.out.println("Next Month Int: "+ nextMonthInt);
+
 
             if (nextMonthInt > 12)
             {
                 yearNoInt = yearNoInt+1;
             }
+            System.out.println("Final year: "+ yearNoInt);
+
+
 
             String nextMonthString = String.valueOf(nextMonthInt);
+
+
+
 
             if (nextMonthString.length() ==1)
             {
                 nextMonthString ="0"+nextMonthString;
             }
 
+            System.out.println("Final next month: "+nextMonthString);
+
             String yearNoString  = String.valueOf(yearNoInt);
             // Get numner of days in next month
 
             String dateForCalcNextMonthDays = yearNoString +"-"+nextMonthString+"-"+dayNo+" 11:00";
 
+            System.out.println("Date for calc next month: "+dateForCalcNextMonthDays);
+
             //            String str = "2016-03-04 11:30";
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
             LocalDateTime dateTime = LocalDateTime.parse(dateForCalcNextMonthDays, formatter);
             //           LocalDateTime dateTime2 = LocalDateTime.now();
+
             ChronoField chronoField = ChronoField.DAY_OF_MONTH;
+
             long daysInnextMonth = dateTime.range(chronoField).getMaximum();
 
             System.out.println("===========================");
@@ -154,6 +188,13 @@ public class DateFunctions {
 
 
             LocalDate newFullLocalDate = LocalDate.parse(dateForCalcNextMonthDays, formatter);
+
+            // Subtract 1 day
+
+            newFullLocalDate = newFullLocalDate.minusDays(1);
+
+            System.out.println("New full localdate date: "+ newFullLocalDate);
+
             return  newFullLocalDate;
         }
         catch (Exception ex)
